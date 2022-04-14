@@ -7,16 +7,33 @@ const assert = require('assert');
 var config = require('config');
 var Stopwatch = require("statman-stopwatch");
 var moment = require('moment')
+// var cors = require('cors');
+
+// var corsOptions = {
+//   origin: ["https://webconf.numerique.gouv.fr/","http://localhost:3000"],
+//   optionsSuccessStatus: 200 // For legacy browser support
+//   }
+
+
+// app.use(cors(corsOptions))
+
+
 
 app.use(bodyParser.json());
+
 
 // Called by test
 app.all('/', function(req, res, next) 
 {
+
+
   logRequest(req.body, "/")
   setCORSHeaders(res);
 
-  MongoClient.connect(req.body.db.url, function(err, client)
+  MongoClient.connect(
+    // req.body.db.url 
+    "mongodb+srv://youssef:youssef@cluster0.7rte2.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+       , function(err, client)
   {
     if ( err != null )
     {
@@ -37,6 +54,8 @@ app.all('/', function(req, res, next)
 // Called by template functions and to look up variables
 app.all('/search', function(req, res, next)
 {
+  
+
   logRequest(req.body, "/search")
   setCORSHeaders(res);
 
@@ -124,6 +143,7 @@ function queryFinished(requestId, queryId, results, res, next)
 // Called to get graph points
 app.all('/query', function(req, res, next)
 {
+    
     logRequest(req.body, "/query")
     setCORSHeaders(res);
 
@@ -174,7 +194,6 @@ var serverConfig = config.get('server');
 
 app.listen(serverConfig.port);
 
-console.log("Server is listening on port " + serverConfig.port);
 
 function setCORSHeaders(res) 
 {
@@ -220,6 +239,7 @@ function parseQuery(query, substitutions)
   {
     // Split the first bit - it's the collection name and operation ( must be aggregate )
     var parts = query.substring(3, openBracketIndex).split('.')
+
     // Collection names can have .s so last part is operation, rest is the collection name
     if (parts.length >= 2)
     {
@@ -232,7 +252,9 @@ function parseQuery(query, substitutions)
     }
   
     // Args is the rest up to the last bracket
-    var closeBracketIndex = query.indexOf(')', openBracketIndex)
+    var closeBracketIndex = query.length - 1;
+    // query.indexOf(')', openBracketIndex)
+ 
     if (closeBracketIndex == -1)
     {
       queryErrors.push("Can't find last bracket")
@@ -279,6 +301,7 @@ function parseQuery(query, substitutions)
   {
     doc.err = new Error('Failed to parse query - ' + queryErrors.join(':'))
   }
+
 
   return doc
 }
